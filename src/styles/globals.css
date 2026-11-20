@@ -1,7 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap');
 :root{--color-accent:#FF3D81;--color-ink:#15121F;--color-bg:#fff;--color-surface-soft:#F6F3FB;--color-lilac:#E8E0FF;--color-peach:#FFE0D1;--color-pink-tint:#FFE1EC;--color-yellow:#FFE23D;--color-muted:#6B6678;--color-border-light:#E5E1EE;--color-success-bg:#CFF3DC;--color-success:#1B9A4A;--shadow-hard:4px 4px 0 var(--color-ink);--col-w:550px}
 *{box-sizing:border-box}
-body{margin:0;background:var(--color-bg);color:var(--color-ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:17px}
+body{margin:0;background:var(--color-bg);color:var(--color-ink);font-family:var(--font-bricolage),system-ui,sans-serif;font-size:17px}
 button{font:inherit;color:inherit;cursor:pointer}
 .sheet{max-width:var(--col-w);margin:0 auto;padding:20px 16px 48px}
 .top{display:flex;justify-content:space-between;align-items:center;height:56px;margin-bottom:12px}

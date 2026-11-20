@@ -4,8 +4,8 @@ import { fetchMatches } from '@/lib/api';
 import { Avatar, Button } from '../ui';
 import type { Profile } from '@/types/profile';
 
-export function MatchesList() {
-  const [items, setItems] = useState<Profile[] | null>(null);
+export function MatchesList({ initialItems }: { initialItems?: Profile[] }) {
+  const [items, setItems] = useState<Profile[] | null>(initialItems ?? null);
   const [error, setError] = useState(false);
 
   const load = useCallback(() => {
@@ -13,7 +13,10 @@ export function MatchesList() {
     setItems(null);
     fetchMatches().then(setItems).catch(() => setError(true));
   }, []);
-  useEffect(load, [load]);
+  // The server already sent the list; only fetch on the client if it didn't.
+  useEffect(() => {
+    if (!initialItems) load();
+  }, [initialItems, load]);
 
   if (error)
     return (
