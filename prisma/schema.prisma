@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum SwipeDirection {
+  LIKE
+  PASS
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  name         String
+  age          Int
+  photo        String
+  bio          String
+  location     String
+  /// JSON-encoded string[] (SQLite has no native list type). Use lib/interests.ts to read/write.
+  interests    String
+  /// INTERNAL ONLY. True if this seeded profile already likes the demo user.
+  /// Must never leave the backend: every response goes through toPublicProfile().
+  hasLikedUser Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  swipe Swipe?
+}
+
+model Swipe {
+  id        String         @id @default(cuid())
+  /// UNIQUE: one swipe per profile, ever, enforced by the database.
+  profileId String         @unique
+  direction SwipeDirection
+  createdAt DateTime       @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([direction])
+}
