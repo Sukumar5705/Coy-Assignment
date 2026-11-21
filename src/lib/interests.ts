@@ -1,7 +1,4 @@
-/**
- * SQLite has no list column, so `Profile.interests` is stored as a JSON-encoded string[].
- * These two helpers are the only place that knows about that encoding.
- */
+
 
 export function encodeInterests(interests: string[]): string {
   return JSON.stringify(interests);

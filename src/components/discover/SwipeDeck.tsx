@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   AnimatePresence,
   animate,
@@ -10,7 +10,8 @@ import {
   type PanInfo,
 } from 'framer-motion';
 import { useSwipeDeck } from '@/lib/useSwipeDeck';
-import { Badge, Button, Dialog, Avatar } from '../ui';
+import { Badge, Button } from '../ui';
+import { MatchCelebration } from './MatchCelebration';
 import type { Profile, SwipeDirection } from '@/types/profile';
 
 const THRESHOLD = 120;
@@ -118,50 +119,52 @@ export function SwipeDeck({ initialFeed }: { initialFeed?: Profile[] }) {
     d.swipe(dir);
   }
 
-  if (d.loading) return <div className="skel" aria-busy="true" aria-label="Loading" />;
-  if (d.error)
-    return (
+  // IMPORTANT: loading/error/empty are just different *content* for the deck area.
+  // They must never early-`return` before the match celebration below, or a confirmed
+  // match queued while the deck is loading/erroring/empty would never be shown.
+  let content: ReactNode;
+
+  if (d.loading) {
+    content = <div className="skel" aria-busy="true" aria-label="Loading" />;
+  } else if (d.error) {
+    content = (
       <div className="err" role="alert">
         <span>Couldn&apos;t load profiles.</span>
         <Button variant="outline" onClick={d.reload}>Try again</Button>
       </div>
     );
+  } else {
+    const [top, next] = d.queue;
+    content = (
+      <>
+        <div className="deck">
+          {next && <div className="card pc back" aria-hidden="true"><Body p={next} /></div>}
+          <AnimatePresence custom={exitDir} initial={false}>
+            {top && <TopCard key={top.id} p={top} exitDir={exitDir} onSwipe={handleSwipe} />}
+          </AnimatePresence>
+          {!top && (
+            <div className="empty"><b>You&apos;re all caught up</b>No more profiles right now.</div>
+          )}
+        </div>
+        {d.swipeError && <p className="err" role="alert">Couldn&apos;t save that swipe. Try again.</p>}
+        <div className="controls">
+          <Button variant="outline" disabled={!top} onClick={() => handleSwipe('PASS')} aria-label="Pass">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            Pass
+          </Button>
+          <Button disabled={!top} onClick={() => handleSwipe('LIKE')} aria-label="Like">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.4-9C1.3 8.3 3.3 4.8 6.9 4.8c2.1 0 3.6 1.1 5.1 3 1.5-1.9 3-3 5.1-3 3.6 0 5.6 3.5 4.3 6.7-1.9 4.6-9.4 9-9.4 9z" /></svg>
+            Like
+          </Button>
+        </div>
+      </>
+    );
+  }
 
-  const [top, next] = d.queue;
   return (
     <>
-      <div className="deck">
-        {next && <div className="card pc back" aria-hidden="true"><Body p={next} /></div>}
-        <AnimatePresence custom={exitDir} initial={false}>
-          {top && <TopCard key={top.id} p={top} exitDir={exitDir} onSwipe={handleSwipe} />}
-        </AnimatePresence>
-        {!top && (
-          <div className="empty"><b>You&apos;re all caught up</b>No more profiles right now.</div>
-        )}
-      </div>
-      {d.swipeError && <p className="err" role="alert">Couldn&apos;t save that swipe. Try again.</p>}
-      <div className="controls">
-        <Button variant="outline" disabled={!top} onClick={() => handleSwipe('PASS')} aria-label="Pass">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          Pass
-        </Button>
-        <Button disabled={!top} onClick={() => handleSwipe('LIKE')} aria-label="Like">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.4-9C1.3 8.3 3.3 4.8 6.9 4.8c2.1 0 3.6 1.1 5.1 3 1.5-1.9 3-3 5.1-3 3.6 0 5.6 3.5 4.3 6.7-1.9 4.6-9.4 9-9.4 9z" /></svg>
-          Like
-        </Button>
-      </div>
-
-      <Dialog open={!!d.match} onClose={d.clearMatch} labelId="match-title">
-        {d.match && (
-          <>
-            <Badge style={{ background: 'var(--color-accent)', color: '#fff', transform: 'rotate(-3deg)' }}>MATCH</Badge>
-            <h2 id="match-title">It&apos;s a Match!</h2>
-            <Avatar name={d.match.name} photo={d.match.photo} />
-            <p>You and <b>{d.match.name}</b> like each other.</p>
-            <Button block onClick={d.clearMatch}>Continue</Button>
-          </>
-        )}
-      </Dialog>
+      {content}
+      <MatchCelebration match={d.match} onContinue={d.clearMatch} />
     </>
   );
 }
